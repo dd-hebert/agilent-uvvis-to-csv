@@ -16,3 +16,6 @@ python uv2csv.py
 The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are automatically exported as .csv files. 
 - **.KD files:** .csv files are exported to a folder named ``self.name`` in ``self.path``. 
 - **.SD files:** a single .csv file named ``self.name`` is exported to ``self.path``.
+
+## Requirements
+You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
