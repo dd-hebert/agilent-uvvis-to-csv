@@ -48,8 +48,8 @@ class BinaryFile:
         Keyword Arguments
         -----------------
         wavelength_range : tuple
-            Set the range of wavelengths recorded by the detector.
-            Default is 190 nm to 1100 nm.
+            Set the range of wavelengths recorded by the detector (min, max).
+            Default value is (190, 1101).
 
         Returns
         -------
