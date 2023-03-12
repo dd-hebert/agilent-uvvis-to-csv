@@ -8,7 +8,7 @@ Currently supports **.KD** and **.SD** binary file types.
 ## Using This Script
 To use this script, simply run it from the command line then provide a file path when prompted.
 
-```
+```sh
 python uv2csv.py
 ```
 
