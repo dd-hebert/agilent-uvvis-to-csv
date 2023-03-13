@@ -21,13 +21,13 @@ class BinaryFile:
     and UV-Vis spectra are exported as .csv files.
 
     '''
-    supported_file_types = ['.KD', '.kd', '.SD', '.sd']
+    supported_file_types = ['.KD', '.SD']
 
     def __init__(self):
         self.path = os.path.normpath(input('Enter a file path: '))
 
         # Check path is a .KD or .SD file
-        while (os.path.splitext(self.path)[1] not in self.supported_file_types
+        while (os.path.splitext(self.path)[1].upper() not in self.supported_file_types
                 or os.path.isfile(self.path) is False):
 
             print('Invalid file path (must be a .KD or .SD file).')
@@ -48,7 +48,7 @@ class BinaryFile:
         Keyword Arguments
         -----------------
         wavelength_range : tuple
-            Set the range of wavelengths recorded by the detector (min, max).
+            Set the range of wavelengths (in nm) recorded by the detector (min, max).
             Default value is (190, 1101).
 
         Returns
@@ -84,7 +84,7 @@ class BinaryFile:
 
         spectra.pop(-1) # Remove weird final spectrum
 
-        if self.file_type in ['.SD', '.sd']:
+        if self.file_type.upper() == '.SD':
             return spectra[0]
 
         return spectra
@@ -100,7 +100,7 @@ class BinaryFile:
             None.
 
         '''
-        if self.file_type in ['.KD', '.kd']:
+        if self.file_type.upper() == '.KD':
             output_dir = os.path.splitext(self.path)[0]
             n = 1
             # If a folder named {self.name} exists, add a number after.
@@ -117,7 +117,7 @@ class BinaryFile:
                 spectrum.to_csv(os.path.join(output_dir, f'{str(i+1).zfill(digits)}.csv'), index=False)
             print(f'Finished export: {output_dir}', end='\n')
 
-        elif self.file_type in ['.SD', '.sd']:
+        elif self.file_type.upper() == '.SD':
             filename = os.path.splitext(self.path)[0] + '.csv'
             n = 1
 
