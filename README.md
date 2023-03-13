@@ -13,6 +13,9 @@ python uv2csv.py
 ```
 Then provide a file path when prompted.
 
+## How It Works
+This script works by searching **.KD** or **.SD** binary file for a string of hexedecimal values ``\xFF\xFF\x8F\x03\x00\x00\x00`` which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data following this string of hexedecimal values are little-endian double precision floats which get unpacked into a pandas DataFrame.
+
 ## Where .CSV Files Are Exported
 The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are automatically exported as .csv files. 
 - **.KD files:** .csv files get exported to a folder named ``self.name`` in ``self.path``. 
@@ -32,9 +35,6 @@ self.spectra = self.read_binary() # Default wavelength range (190 to 1100 nm).
 # Line 39
 self.spectra = self.read_binary(wavelength_range=(min, max)) # Set a different wavelength range from min to max (in nm).
 ```
-
-## How It Works
-This script works by searching **.KD** or **.SD** binary file for a string of hexedecimal values ``\xFF\xFF\x8F\x03\x00\x00\x00`` which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data following this string of hexedecimal values are little-endian double precision floats which get unpacked into a pandas DataFrame.
 
 ## Requirements
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
