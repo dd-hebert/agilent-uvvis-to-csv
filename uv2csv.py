@@ -49,7 +49,7 @@ class BinaryFile:
         -----------------
         wavelength_range : tuple
             Set the range of wavelengths (in nm) recorded by the detector (min, max).
-            Default value is (190, 1101).
+            Default value is (190, 1100).
 
         Returns
         -------
@@ -62,8 +62,13 @@ class BinaryFile:
         spectra = []
 
         # Spectrometer records from 190-1100 nm by default
-        wavelength_range = kwargs.get('wavelength_range', (190,1101))
-        wavelength = list(range(wavelength_range[0], wavelength_range[1]))
+        wavelength_range = kwargs.get('wavelength_range', (190, 1100))
+        
+        if wavelength_range[0] > wavelength_range[1]:
+            raise Exception('Wavelength range error: minimum wavelength greater than maximum.')
+
+        wavelength = list(range(wavelength_range[0], wavelength_range[1] + 1))
+        absorbance_table_length = (wavelength_range[1] - wavelength_range[0]) * 8 + 8
 
         with open(self.path,'rb') as binary_file:
             file_bytes = binary_file.read() # Bytes from .KD or .SD binary file
@@ -76,11 +81,11 @@ class BinaryFile:
             absorbance = []
             spectrum_locations.append(finder)
 
-            for i in range(spectrum_locations[-1]+7, spectrum_locations[-1]+7288, 8):
-                absorbance.append(struct.unpack('<d', (file_bytes[i:i+8]))[0]) # Little endian mode
+            for i in range(spectrum_locations[-1] + 7, spectrum_locations[-1] + absorbance_table_length, 8):
+                absorbance.append(struct.unpack('<d', (file_bytes[i:i + 8]))[0]) # Little endian mode
 
             spectra.append(pd.DataFrame({'Wavelength (nm)':wavelength, 'Absorbance (AU)':absorbance}))
-            finder = file_bytes.find(b'\xFF\xFF\x8F\x03\x00\x00\x00', spectrum_locations[-1]+7)
+            finder = file_bytes.find(b'\xFF\xFF\x8F\x03\x00\x00\x00', spectrum_locations[-1] + 7)
 
         spectra.pop(-1) # Remove weird final spectrum
 
@@ -114,7 +119,7 @@ class BinaryFile:
             digits = len(str(len(self.spectra)))
 
             for i,spectrum in enumerate(self.spectra):
-                spectrum.to_csv(os.path.join(output_dir, f'{str(i+1).zfill(digits)}.csv'), index=False)
+                spectrum.to_csv(os.path.join(output_dir, f'{str(i + 1).zfill(digits)}.csv'), index=False)
             print(f'Finished export: {output_dir}', end='\n')
 
         elif self.file_type.upper() == '.SD':
