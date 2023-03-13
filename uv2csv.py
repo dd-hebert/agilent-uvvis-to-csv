@@ -4,7 +4,7 @@ to .csv format. To use this script, simply run it from the command line
 then provide a file path. Currently supported binary file types are .KD
 and .SD files.
 
-Version 1.0.0
+Version 1.0.2
 Created by David Hebert
 
 '''
@@ -61,31 +61,35 @@ class BinaryFile:
         spectrum_locations = [0]
         spectra = []
 
-        # Spectrometer records from 190-1100 nm by default
+        # Spectrometer records from 190-1100 nm by default.
         wavelength_range = kwargs.get('wavelength_range', (190, 1100))
         
         if wavelength_range[0] > wavelength_range[1]:
             raise Exception('Wavelength range error: minimum wavelength greater than maximum.')
 
         wavelength = list(range(wavelength_range[0], wavelength_range[1] + 1))
+        
+        # Data is 8 hex characters per wavelength long.
         absorbance_table_length = (wavelength_range[1] - wavelength_range[0]) * 8 + 8
 
         with open(self.path,'rb') as binary_file:
             file_bytes = binary_file.read() # Bytes from .KD or .SD binary file
 
         # Find the string of bytes that precedes absorbance data in binary file.
-        finder = file_bytes.find(b'\xFF\xFF\x8F\x03\x00\x00\x00', spectrum_locations[-1])
+        finder = file_bytes.find(b'\x28\x00\x41\x00\x55\x00\x29\x00', spectrum_locations[-1])
 
         # Extract absorbance data.
         while spectrum_locations[-1] != -1:
-            absorbance = []
             spectrum_locations.append(finder)
+            absorbance = []
+            data_start = spectrum_locations[-1] + 17 # Data starts 17 hex characters after the {finder} string.
+            data_end = data_start + absorbance_table_length
 
-            for i in range(spectrum_locations[-1] + 7, spectrum_locations[-1] + absorbance_table_length, 8):
+            for i in range(data_start, data_end, 8):
                 absorbance.append(struct.unpack('<d', (file_bytes[i:i + 8]))[0]) # Little endian mode
 
             spectra.append(pd.DataFrame({'Wavelength (nm)':wavelength, 'Absorbance (AU)':absorbance}))
-            finder = file_bytes.find(b'\xFF\xFF\x8F\x03\x00\x00\x00', spectrum_locations[-1] + 7)
+            finder = file_bytes.find(b'\x28\x00\x41\x00\x55\x00\x29\x00', data_end)
 
         spectra.pop(-1) # Remove weird final spectrum
 
