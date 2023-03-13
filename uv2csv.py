@@ -4,7 +4,7 @@ to .csv format. To use this script, simply run it from the command line
 then provide a file path. Currently supported binary file types are .KD
 and .SD files.
 
-Version 1.0.2
+Version 0.1.2
 Created by David Hebert
 
 '''
