@@ -40,6 +40,6 @@ self.spectra = self.read_binary(wavelength_range=(min, max)) # Set a different w
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
 
 ## Disclaimer
-This script has only been tested on UV-Vis binary files outputted from a single machine (the spectrometer in my lab). Therefore, different spectrometer setups may produce UV-Vis binary files that cannot be read by this script.
+This script has only been tested on UV-Vis binary files outputted from a single machine (the spectrometer in my lab) running Agilent UV-Vis Chemstation ver. B.05.02 [16]. Therefore, different spectrometer setups or versions of UV-Vis Chemstation may produce UV-Vis binary files that cannot be read by this script.
 
 If you encounter such an issue, please let me know and submit an issue so I can improve this script!
