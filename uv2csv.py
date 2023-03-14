@@ -75,7 +75,7 @@ class BinaryFile:
         spectrum_locations = [0]
         spectra = []
         wavelength = list(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
-        
+
         # Data is 8 hex characters per wavelength long.
         absorbance_table_length = (self.wavelength_range[1] - self.wavelength_range[0]) * 8 + 8
 
