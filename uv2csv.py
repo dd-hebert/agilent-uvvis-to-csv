@@ -4,7 +4,7 @@ to .csv format. To use this script, simply run it from the command line
 then provide a file path. Currently supported binary file types are .KD
 and .SD files.
 
-Version 0.1.2
+Version 0.1.4
 Created by David Hebert
 
 '''
@@ -16,16 +16,33 @@ import pandas as pd
 class BinaryFile:
     '''
     An Agilent UV-Vis Chemstation binary file object. Supported file types
-    are .KD and .SD. Upon creation of a Binary_File object, the user is
-    prompted for a file path. The specified .KD or .SD binary file is read
-    and UV-Vis spectra are exported as .csv files.
+    are .KD and .SD. Upon creation of a Binary_File object, the specified
+    .KD or .SD binary file is read and unpacked into a pandas DataFrame.
 
     '''
     supported_file_types = ['.KD', '.SD']
 
-    def __init__(self):
-        self.path = os.path.normpath(input('Enter a file path: '))
+    def __init__(self, path, **kwargs):
+        '''
+        Initializes a BinaryFile object and reads a UV-Vis binary file.
 
+        Parameters
+        ----------
+        path : str
+            The file path to a UV-Vis binary file (.KD or .SD format).
+
+        Keyword Arguments
+        -----------------
+        wavelength_range : tuple
+            Set the range of wavelengths (in nm) recorded by the detector (min, max).
+            Default value is (190, 1100).
+
+        Returns
+        -------
+        None
+
+        '''
+        self.path = path
         # Check path is a .KD or .SD file
         while (os.path.splitext(self.path)[1].upper() not in self.supported_file_types
                 or os.path.isfile(self.path) is False):
@@ -35,21 +52,18 @@ class BinaryFile:
 
         self.name, self.file_type = os.path.splitext(os.path.basename(self.path))
 
-        print(f'Reading {self.file_type} file...')
-        self.spectra = self.read_binary()
-        print('Exporting .csv files...')
-        self.export_csv()
+        # Spectrometer records from 190-1100 nm by default.
+        self.wavelength_range = kwargs.get('wavelength_range', (190, 1100))
 
-    def read_binary(self, **kwargs):
+        if self.wavelength_range[0] > self.wavelength_range[1]:
+            raise Exception('Wavelength range error: minimum wavelength greater than maximum.')
+
+        self.spectra = self.read_binary()
+
+    def read_binary(self):
         '''
         Reads a .KD or .SD file and extracts the spectra into a list of
         pd DataFrames (.KD file) or single pd DataFrame (.SD file).
-
-        Keyword Arguments
-        -----------------
-        wavelength_range : tuple
-            Set the range of wavelengths (in nm) recorded by the detector (min, max).
-            Default value is (190, 1100).
 
         Returns
         -------
@@ -60,17 +74,12 @@ class BinaryFile:
         '''
         spectrum_locations = [0]
         spectra = []
-
-        # Spectrometer records from 190-1100 nm by default.
-        wavelength_range = kwargs.get('wavelength_range', (190, 1100))
-        
-        if wavelength_range[0] > wavelength_range[1]:
-            raise Exception('Wavelength range error: minimum wavelength greater than maximum.')
-
-        wavelength = list(range(wavelength_range[0], wavelength_range[1] + 1))
+        wavelength = list(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
         
         # Data is 8 hex characters per wavelength long.
-        absorbance_table_length = (wavelength_range[1] - wavelength_range[0]) * 8 + 8
+        absorbance_table_length = (self.wavelength_range[1] - self.wavelength_range[0]) * 8 + 8
+
+        print(f'Reading {self.file_type} file...')
 
         with open(self.path,'rb') as binary_file:
             file_bytes = binary_file.read() # Bytes from .KD or .SD binary file
@@ -109,6 +118,8 @@ class BinaryFile:
             None.
 
         '''
+        print('Exporting .csv files...')
+
         if self.file_type.upper() == '.KD':
             output_dir = os.path.splitext(self.path)[0]
             n = 1
@@ -139,4 +150,6 @@ class BinaryFile:
             print(f'Finished export: {filename}', end='\n')
 
 if __name__ == '__main__':
-    BinaryFile()
+    PATH = os.path.normpath(input('Enter a file path: '))
+    BINARY_FILE = BinaryFile(PATH)
+    BINARY_FILE.export_csv()
