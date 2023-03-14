@@ -14,7 +14,7 @@ python uv2csv.py
 Then provide a file path when prompted.
 
 ## How It Works
-This script works by searching **.KD** or **.SD** binary file for a string of hexedecimal values ``\x28\x00\x41\x00\x55\x00\x29\x00`` which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data following this string of hexedecimal values are little-endian double precision floats which get unpacked into a pandas DataFrame.
+This script works by searching **.KD** or **.SD** binary file for a string of hexedecimal values ``\x28\x00\x41\x00\x55\x00\x29\x00`` which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data following this string of hexedecimal values are little-endian double precision floating-point numbers which get unpacked into a pandas DataFrame.
 
 ## Where .CSV Files Are Exported
 The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are automatically exported as .csv files. 
