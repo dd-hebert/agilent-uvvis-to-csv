@@ -13,6 +13,7 @@ import os
 import struct
 import pandas as pd
 
+
 class BinaryFile:
     '''
     An Agilent UV-Vis Chemstation binary file object. Supported file types
@@ -81,8 +82,8 @@ class BinaryFile:
 
         print(f'Reading {self.file_type} file...')
 
-        with open(self.path,'rb') as binary_file:
-            file_bytes = binary_file.read() # Bytes from .KD or .SD binary file
+        with open(self.path, 'rb') as binary_file:
+            file_bytes = binary_file.read()  # Bytes from .KD or .SD binary file
 
         # Find the string of bytes that precedes absorbance data in binary file.
         finder = file_bytes.find(b'\x28\x00\x41\x00\x55\x00\x29\x00', spectrum_locations[-1])
@@ -91,16 +92,16 @@ class BinaryFile:
         while spectrum_locations[-1] != -1:
             spectrum_locations.append(finder)
             absorbance = []
-            data_start = spectrum_locations[-1] + 17 # Data starts 17 hex characters after the {finder} string.
+            data_start = spectrum_locations[-1] + 17  # Data starts 17 hex characters after the {finder} string.
             data_end = data_start + absorbance_table_length
 
             for i in range(data_start, data_end, 8):
-                absorbance.append(struct.unpack('<d', (file_bytes[i:i + 8]))[0]) # Little endian mode
+                absorbance.append(struct.unpack('<d', (file_bytes[i:i + 8]))[0])  # Little endian mode
 
-            spectra.append(pd.DataFrame({'Wavelength (nm)':wavelength, 'Absorbance (AU)':absorbance}))
+            spectra.append(pd.DataFrame({'Wavelength (nm)': wavelength, 'Absorbance (AU)': absorbance}))
             finder = file_bytes.find(b'\x28\x00\x41\x00\x55\x00\x29\x00', data_end)
 
-        spectra.pop(-1) # Remove weird final spectrum
+        spectra.pop(-1)  # Remove weird final spectrum
 
         if self.file_type.upper() == '.SD':
             return spectra[0]
@@ -133,7 +134,7 @@ class BinaryFile:
             # Get number of digits to use for leading zeros.
             digits = len(str(len(self.spectra)))
 
-            for i,spectrum in enumerate(self.spectra):
+            for i, spectrum in enumerate(self.spectra):
                 spectrum.to_csv(os.path.join(output_dir, f'{str(i + 1).zfill(digits)}.csv'), index=False)
             print(f'Finished export: {output_dir}', end='\n')
 
@@ -148,6 +149,7 @@ class BinaryFile:
 
             self.spectra.to_csv(filename, index=False)
             print(f'Finished export: {filename}', end='\n')
+
 
 if __name__ == '__main__':
     PATH = os.path.normpath(input('Enter a file path: '))
