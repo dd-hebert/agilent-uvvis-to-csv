@@ -89,7 +89,7 @@ class BinaryFile:
             file_bytes = binary_file.read()
 
         # Find the string of bytes that precedes absorbance data in binary file.
-        finder = file_bytes.find(b'\x28\x00\x41\x00\x55\x00\x29\x00', spectrum_locations[-1])
+        finder = file_bytes.find(absorbance_data_string, spectrum_locations[-1])
 
         # Extract absorbance data.
         while spectrum_locations[-1] != -1 and finder != -1:
