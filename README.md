@@ -18,8 +18,8 @@ UV-Vis absorbance data is stored in a data table in the **.KD** and **.SD** bina
 
 ## Where .CSV Files Are Exported
 The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are automatically exported as .csv files. To find the generated .csv files, look in the same location as the original **.KD** or **.SD** binary file.
-- **.KD files:** .csv files get exported to a folder named ``self.name`` in ``self.path``. 
-- **.SD files:** a single .csv file named ``self.name`` is exported to ``self.path``.
+- **Binary Files with Multiple Spectra:** .csv files get exported to a folder named ``self.name`` in ``self.path``. 
+- **Binary Files with a Single Spectrum:** a single .csv file named ``self.name`` is exported to ``self.path``.
 
 Here ``self.name`` is the name of the binary file (without the file extension) and ``self.path`` is the file path where the binary file is located.
 
