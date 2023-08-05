@@ -67,6 +67,11 @@ class BinaryFile:
         """
         Read a .KD or .SD file and extract the spectra into a list.
 
+        Raises
+        ------
+        Exception
+            Raises an exception if no spectra can be found.
+
         Returns
         -------
         spectra: list of :class:`pandas.DataFrame` objects
@@ -81,20 +86,20 @@ class BinaryFile:
         # Data is 8 hex characters per wavelength long.
         absorbance_table_length = (self.wavelength_range[1] - self.wavelength_range[0]) * 8 + 8
 
-        absorbance_data_string = b'\x28\x00\x41\x00\x55\x00\x29\x00'
-
         print(f'Reading {self.file_type} file...')
 
         with open(self.path, 'rb') as binary_file:
             file_bytes = binary_file.read()
 
+        absorbance_data_header, spacing = self._find_absorbance_data_header(file_bytes)
+
         # Find the string of bytes that precedes absorbance data in binary file.
-        finder = file_bytes.find(absorbance_data_string, spectrum_locations[-1])
+        finder = file_bytes.find(absorbance_data_header, spectrum_locations[-1])
 
         # Extract absorbance data.
         while spectrum_locations[-1] != -1 and finder != -1:
             spectrum_locations.append(finder)
-            data_start = spectrum_locations[-1] + 17  # Data starts 17 hex characters after the finder string.
+            data_start = spectrum_locations[-1] + spacing
             data_end = data_start + absorbance_table_length
             absorbance_data = file_bytes[data_start:data_end]
 
@@ -103,20 +108,51 @@ class BinaryFile:
             spectra.append(pd.DataFrame({'Wavelength (nm)': wavelength,
                                          'Absorbance (AU)': absorbance_values}))
 
-            finder = file_bytes.find(absorbance_data_string, data_end)
+            finder = file_bytes.find(absorbance_data_header, data_end)
 
-        if self.file_type.upper() == '.SD':
-            return spectra[0]
+        if spectra == []:
+            raise Exception('Error parsing file. No spectra found.')
 
         return spectra
+
+    def _find_absorbance_data_header(self, file_bytes):
+        """
+        Search the binary file for the appropriate absorbance data header.
+
+        Parameters
+        ----------
+        file_bytes : bytes
+            The raw bytes of the binary file.
+
+        Raises
+        ------
+        Exception
+            Raises an exception if no absorbance data headers can be found.
+
+        Returns
+        -------
+        header : string
+            The absorbance data header as a hex string.
+
+        """
+        # Each header contains its hex string and the spacing that follows it.
+        headers = {
+            '( A U ) ': (b'\x28\x00\x41\x00\x55\x00\x29\x00', 17),
+            '(AU) ': (b'\x28\x41\x55\x29\x00', 5)
+        }
+        for key, (header, spacing) in headers.items():
+            if file_bytes.find(header, 0) != -1:
+                return header, spacing
+
+        raise Exception('Error parsing file. No absorbance data headers could be found.')
 
     def export_csv(self):
         """
         Export spectra as .csv files.
 
-        For .KD files, .csv files are exported to a folder named ``self.name``
-        in ``self.path``. For .SD files, a .csv file named ``self.name`` is
-        exported to ``self.path``.
+        For files containing multiple spectra, .csv files are exported to a
+        folder named ``self.name`` in ``self.path``. For files with a single
+        spectrum, a .csv file named ``self.name`` is exported to ``self.path``.
 
         Returns
         -------
@@ -125,7 +161,7 @@ class BinaryFile:
         """
         print('Exporting .csv files...')
 
-        if self.file_type.upper() == '.KD':
+        if len(self.spectra) > 1:
             output_dir = os.path.splitext(self.path)[0]
             n = 1
             # If a folder named self.name exists, add a number after.
@@ -142,7 +178,7 @@ class BinaryFile:
                 spectrum.to_csv(os.path.join(output_dir, f'{str(i + 1).zfill(digits)}.csv'), index=False)
             print(f'Finished export: {output_dir}', end='\n')
 
-        elif self.file_type.upper() == '.SD':
+        else:
             filename = os.path.splitext(self.path)[0] + '.csv'
             n = 1
 
@@ -151,7 +187,7 @@ class BinaryFile:
                 filename = os.path.splitext(self.path)[0] + f' ({n}).csv'
                 n += 1
 
-            self.spectra.to_csv(filename, index=False)
+            self.spectra[0].to_csv(filename, index=False)
             print(f'Finished export: {filename}', end='\n')
 
 
