@@ -38,6 +38,10 @@ if __name__ == '__main__':
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
 
 ## Disclaimer
-This script has only been tested on UV-Vis binary files outputted from a single machine (the spectrometer in my lab) running Agilent UV-Vis Chemstation ver. B.05.02 [16] using the default standard and kinetics methods. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
+So far, this script has only been tested on UV-Vis binary files from two versions of the Agilent UV-Vis Chemstation software, using the default standard and kinetics methods. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
+
+**Supported Chemstation Versions:**
+- B.05.02 [16]
+- A.08.03 [71]
 
 If you encounter an issue, please submit an issue so I can improve this script!
