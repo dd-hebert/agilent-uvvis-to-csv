@@ -14,7 +14,9 @@ python uv2csv.py
 Then provide a file path when prompted.
 
 ## How It Works
-UV-Vis absorbance data is stored in a data table in the **.KD** and **.SD** binary files. This data table has a unique header such as ``A B S O R B A N C E ( A U ) `` in hexadecimal. The way this script works is by searching a **.KD** or **.SD** binary file for the unique hexadecimal header which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data that follows this header are encoded as little-endian double precision floats, which the script unpacks into a pandas DataFrame.
+In the **.KD** and **.SD** binary files, UV-Vis absorbance data is stored in a data table. This data table has a unique header such as ``A B S O R B A N C E ( A U ) `` in hexadecimal. 
+
+The way this script works is by searching the **.KD** or **.SD** binary file for the unique hexadecimal header which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data that follows this header are encoded as little-endian double precision floats, which the script unpacks into a pandas DataFrame.
 
 ## Where .CSV Files Are Exported
 The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are automatically exported as .csv files. To find the generated .csv files, look in the same location as the original **.KD** or **.SD** binary file.
@@ -38,7 +40,7 @@ if __name__ == '__main__':
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
 
 ## Disclaimer
-So far, this script has only been tested on UV-Vis binary files from two versions of the Agilent UV-Vis Chemstation software, using the default standard and kinetics methods. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
+So far, this script has only been tested on UV-Vis binary files from two versions of the Agilent UV-Vis Chemstation software. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
 
 **Supported Chemstation Versions:**
 - B.05.02 [16]
