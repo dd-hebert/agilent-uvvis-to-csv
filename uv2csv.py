@@ -279,14 +279,14 @@ class BinaryFile:
                 n += 1
             return output_dir
 
-        def get_unique_filename(path, base_filename):
+        def get_unique_filename(base_filename):
             """If a file named base_filename exists, add a number after."""
             n = 1
-            filename = base_filename
-            while os.path.exists(filename):
-                filename = f'{os.path.splitext(path)[0]} ({n})'
+            unique_filename = base_filename
+            while os.path.exists(f'{unique_filename}.csv'):
+                unique_filename = base_filename + f' ({n})'
                 n += 1
-            return filename
+            return unique_filename
 
         if len(self.spectra) > 1:
             output_dir = get_unique_directory(os.path.splitext(self.path)[0])
@@ -306,7 +306,7 @@ class BinaryFile:
             if self.samplenames[0]:
                 base_filename += f' - {self.samplenames[0]}'
 
-            filename = get_unique_filename(self.path, base_filename)
+            filename = get_unique_filename(base_filename)
             self.spectra[0].to_csv(f'{filename}.csv', index=False)
             print(f'Finished export: {filename}.csv')
 
