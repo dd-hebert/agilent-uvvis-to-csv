@@ -23,7 +23,7 @@ The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are auto
 - **Binary Files with Multiple Spectra:** .csv files get exported to a folder named ``self.name`` in ``self.path``. 
 - **Binary Files with a Single Spectrum:** a single .csv file named ``self.name`` is exported to ``self.path``.
 
-Here ``self.name`` is the name of the binary file (without the file extension) and ``self.path`` is the file path where the binary file is located.
+Here ``self.name`` is the name of the binary file (without the file extension) and ``self.path`` is the file path where the binary file is located. **Note:** When parsing .SD files, the file names of the exported .csv files will also contain their sample names (if they have been provided). Sample names are currently not supported for .KD files.
 
 ## Changing The Wavelength Range
 By default, the script assumes your spectrometer captures data from **190 nm to 1100 nm**. If the range of wavelengths your spectrometer records is different than this, you can set the wavelength range by adding a single keyword argument ``wavelength_range`` to the ``BinaryFile`` object constructor at the bottom of the script:
