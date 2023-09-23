@@ -26,7 +26,7 @@ class BinaryFile:
 
     supported_file_types = ['.KD', '.SD']
 
-    def __init__(self, path, wavelength_range=(190, 1100)):
+    def __init__(self, path, export_csv=False, wavelength_range=(190, 1100)):
         """
         Initialize a :class:`BinaryFile` object and read a UV-Vis binary file.
 
@@ -34,6 +34,10 @@ class BinaryFile:
         ----------
         path : str
             The file path to a UV-Vis binary file (.KD or .SD format).
+        export_csv : bool
+            True or False. Set to True to automatically export .csv files upon creation
+            of the :class:`BinaryFile` object. Default is False (.csv files not automatically
+            exported.)
         wavelength_range : tuple
             Set the range of wavelengths (in nm) recorded by the detector (min, max).
             Default value is (190, 1100).
@@ -51,22 +55,22 @@ class BinaryFile:
             self.absorbance_table_length = self._absorbance_table_length()
             self.name, self.file_type = os.path.splitext(os.path.basename(self.path))
             self.spectra, self.samplenames = self.read_binary()
+            if export_csv is True:
+                self.export_csv()
 
     def _check_path(self):
         """Check path is a .KD or .SD file."""
         while True:
+            if self.path.lower() == 'q':
+                self.path = ''
+                break
+
             ext = os.path.splitext(self.path)[1].upper()
             if ext in self.supported_file_types and os.path.isfile(self.path):
                 break
 
             print('Invalid file path (must be a .KD or .SD file).')
-            input_path = os.path.normpath(input('Enter a file path or "Q" to quit: '))
-
-            if input_path.upper() == 'Q':
-                self.path = ''
-                break
-
-            self.path = input_path
+            self.path = os.path.normpath(input('Enter a file path or "q" to quit: '))
 
     def _check_wavelength_range(self):
         """Check ``wavelength_range`` is valid."""
@@ -321,7 +325,5 @@ class BinaryFile:
 
 
 if __name__ == '__main__':
-    PATH = os.path.normpath(input('Enter a file path: '))
-    BINARY_FILE = BinaryFile(PATH)
-    if BINARY_FILE.path:
-        BINARY_FILE.export_csv()
+    PATH = os.path.normpath(input('Enter a file path or "q" to quit: '))
+    BINARY_FILE = BinaryFile(PATH, export_csv=True)
