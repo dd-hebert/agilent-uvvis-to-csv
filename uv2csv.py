@@ -45,19 +45,28 @@ class BinaryFile:
         """
         self.path = path
         self._check_path()
-        self.wavelength_range = wavelength_range
-        self._check_wavelength_range()
-        self.absorbance_table_length = self._absorbance_table_length()
-        self.name, self.file_type = os.path.splitext(os.path.basename(self.path))
-        self.spectra, self.samplenames = self.read_binary()
+        if self.path:
+            self.wavelength_range = wavelength_range
+            self._check_wavelength_range()
+            self.absorbance_table_length = self._absorbance_table_length()
+            self.name, self.file_type = os.path.splitext(os.path.basename(self.path))
+            self.spectra, self.samplenames = self.read_binary()
 
     def _check_path(self):
         """Check path is a .KD or .SD file."""
-        while (os.path.splitext(self.path)[1].upper() not in self.supported_file_types
-                or os.path.isfile(self.path) is False):
+        while True:
+            ext = os.path.splitext(self.path)[1].upper()
+            if ext in self.supported_file_types and os.path.isfile(self.path):
+                break
 
             print('Invalid file path (must be a .KD or .SD file).')
-            self.path = os.path.normpath(input('Enter a file path: '))
+            input_path = os.path.normpath(input('Enter a file path or "Q" to quit: '))
+
+            if input_path.upper() == 'Q':
+                self.path = ''
+                break
+
+            self.path = input_path
 
     def _check_wavelength_range(self):
         """Check ``wavelength_range`` is valid."""
@@ -314,4 +323,5 @@ class BinaryFile:
 if __name__ == '__main__':
     PATH = os.path.normpath(input('Enter a file path: '))
     BINARY_FILE = BinaryFile(PATH)
-    BINARY_FILE.export_csv()
+    if BINARY_FILE.path:
+        BINARY_FILE.export_csv()
