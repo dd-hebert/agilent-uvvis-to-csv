@@ -14,25 +14,24 @@ python uv2csv.py
 Then provide a file path when prompted.
 
 ## How It Works
-In the **.KD** and **.SD** binary files, UV-Vis absorbance data is stored in a data table. This data table has a unique header such as ``A B S O R B A N C E ( A U ) `` in hexadecimal. 
+In the **.KD** and **.SD** binary files, UV-Vis absorbance data is stored in a data table which has a unique hexadecimal header.
 
 The way this script works is by searching the **.KD** or **.SD** binary file for the unique hexadecimal header which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data that follows this header are encoded as little-endian double precision floats, which the script unpacks into a pandas DataFrame.
 
-## Where .CSV Files Are Exported
-The specified **.KD** or **.SD** binary file is read and UV-Vis spectra are automatically exported as .csv files. To find the generated .csv files, look in the same location as the original **.KD** or **.SD** binary file.
-- **Binary Files with Multiple Spectra:** .csv files get exported to a folder named ``self.name`` in ``self.path``. 
-- **Binary Files with a Single Spectrum:** a single .csv file named ``self.name`` is exported to ``self.path``.
+## Export Location for .CSV Files
+The program automatically generates .csv files containing UV-Vis spectra when reading a specified **.KD** or **.SD** binary file. You can locate these exported .csv files in the same directory as the original **.KD** or **.SD** binary file.
+- **Binary Files with Multiple Spectra:** For binary files containing multiple spectra, the .csv files are exported to a folder named after the binary file's name (without the file extension) within the same directory as the binary file.
+- **Binary Files with a Single Spectrum:** When dealing with binary files containing a single spectrum, a single .csv file named after the binary file's name (without the file extension) is directly exported to the same directory as the binary file.
 
-Here ``self.name`` is the name of the binary file (without the file extension) and ``self.path`` is the file path where the binary file is located. **Note:** When parsing .SD files, the file names of the exported .csv files will also contain their sample names (if they have been provided). Sample names are currently not supported for .KD files.
+**Note:** If you are parsing a **.SD** file which contains sample names, the sample names will also be included in the file names of the exported .csv files. Please be aware that sample names are not currently supported for **.KD** files.
 
 ## Changing The Wavelength Range
 By default, the script assumes your spectrometer captures data from **190 nm to 1100 nm**. If the range of wavelengths your spectrometer records is different than this, you can set the wavelength range by adding a single keyword argument ``wavelength_range`` to the ``BinaryFile`` object constructor at the bottom of the script:
 
 ```python
 if __name__ == '__main__':
-    PATH = os.path.normpath(input('Enter a file path: '))
-    BINARY_FILE = BinaryFile(PATH, wavelength_range=(min, max))
-    BINARY_FILE.export_csv()
+    PATH = os.path.normpath(input('Enter a file path or "q" to quit: '))
+    BINARY_FILE = BinaryFile(PATH, export_csv=True, wavelength_range=(min, max))
 
 ```
 
