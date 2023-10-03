@@ -1,7 +1,7 @@
 # uv2csv
 A simple script for converting Agilent 845x Chemstation UV-Vis binary files (**.KD** or **.SD** formats) to .csv format.
 
-Do you have **.KD** or **.SD** UV-Vis binary files but no access to the Agilent 845x UV-Vis Chemstation software? Are your **.KD** files massive and contain thousands of spectra? This script will automatically read and convert your **.KD** or **.SD** files to .csv format (and it's significantly faster than exporting .csv files directly from the Agilent Chemstation software!). Exports thousands of spectra in seconds!
+Do you have **.KD** or **.SD** UV-Vis binary files but no access to the Agilent 845x UV-Vis Chemstation software? Are your **.KD** files massive and contain thousands of spectra? This script will automatically read and convert your **.KD** or **.SD** files to .csv format (and it's significantly faster than the Agilent Chemstation software!). Exports thousands of spectra in seconds!
 
 Currently supports **.KD** and **.SD** binary file types.
 
@@ -20,8 +20,8 @@ The way this script works is by searching the **.KD** or **.SD** binary file for
 
 ## Export Location for .CSV Files
 The program automatically generates .csv files containing UV-Vis spectra when reading a specified **.KD** or **.SD** binary file. You can locate these exported .csv files in the same directory as the original **.KD** or **.SD** binary file.
-- **Binary Files with Multiple Spectra:** For binary files containing multiple spectra, the .csv files are exported to a folder named after the binary file's name (without the file extension) within the same directory as the binary file.
-- **Binary Files with a Single Spectrum:** When dealing with binary files containing a single spectrum, a single .csv file named after the binary file's name (without the file extension) is directly exported to the same directory as the binary file.
+- **Binary Files with Multiple Spectra:** The .csv files are exported into a folder within the same directory as the binary file.
+- **Binary Files with a Single Spectrum:** A single .csv file is exported to the same directory as the binary file.
 
 **Note:** If you are parsing a **.SD** file which contains sample names, the sample names will also be included in the file names of the exported .csv files. Please be aware that sample names are not currently supported for **.KD** files.
 
