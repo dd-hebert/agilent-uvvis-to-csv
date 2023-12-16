@@ -251,13 +251,13 @@ class BinaryFile:
         Returns
         -------
         header : string
-            The sample name as a hex string.
+            The sample name header as a hex string.
 
         """
         # Each header contains its hex string, spacing, and termination character.
         headers = {
             'S a m p l e N a m e ': (b'\x53\x00\x61\x00\x6D\x00\x70\x00\x6C\x00\x65\x00\x4E\x00\x61\x00\x6D\x00\x65\x00', 28, b'\x09'),
-            'SampleName ': (b'\x53\x61\x6D\x70\x6C\x65\x4E\x61\x6D\x65', 110, b'\x02')
+            '(`DataType': (b'\x28\x60\x44\x61\x74\x61\x54\x79\x70\x65', 33, b'\x02')
         }
         for key, (header, spacing, end_char) in headers.items():
             if file_bytes.find(header, 0) != -1:
