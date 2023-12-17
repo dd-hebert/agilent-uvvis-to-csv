@@ -4,7 +4,7 @@ A simple script to convert Agilent 845x Chemstation UV-Vis files to .csv format.
 To use this script, simply run it from the command line then provide a file
 path. Currently supported UV-Vis file types are .KD and .SD files.
 
-Version 0.1.7
+Version 0.1.8
 Created by David Hebert
 
 """
