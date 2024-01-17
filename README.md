@@ -39,9 +39,9 @@ if __name__ == '__main__':
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
 
 ## Disclaimer
-So far, this script has only been tested on UV-Vis binary files from two versions of the Agilent UV-Vis Chemstation software. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
+So far, this script has only been tested on UV-Vis binary files from a three different versions of the Agilent UV-Vis Chemstation software. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
 
-**Supported Chemstation Versions:**
+**Known Supported Chemstation Versions:**
 - B.05.02 [16]
 - A.08.03 [71]
 
