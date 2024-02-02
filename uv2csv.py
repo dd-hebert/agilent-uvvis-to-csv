@@ -228,7 +228,7 @@ class BinaryFile:
             samplename_start = find_header + spacing
             samplename_end = find_end_char
             raw_samplename = file_bytes[samplename_start:samplename_end]
-            samplename = raw_samplename.replace(b'\x00', b'').decode('ascii')
+            samplename = raw_samplename.replace(b'\x00', b'').decode('ascii', 'replace')
             samplenames.append(samplename)
             position = find_end_char + self.absorbance_table_length
 
