@@ -19,7 +19,7 @@ In the **.KD** and **.SD** binary files, UV-Vis absorbance data is stored in a d
 The way this script works is by searching the **.KD** or **.SD** binary file for the unique hexadecimal header which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data that follows this header are encoded as little-endian double precision floats, which the script unpacks into a pandas DataFrame.
 
 ## Export Location for .CSV Files
-The program automatically generates .csv files containing UV-Vis spectra when reading a specified **.KD** or **.SD** binary file. You can locate these exported .csv files in the same directory as the original **.KD** or **.SD** binary file.
+The script automatically exports .csv files containing UV-Vis spectra upon parsing a specified **.KD** or **.SD** binary file. You can locate the exported .csv files in the same directory as the original **.KD** or **.SD** binary file.
 - **Binary Files with Multiple Spectra:** The .csv files are exported into a folder within the same directory as the binary file.
 - **Binary Files with a Single Spectrum:** A single .csv file is exported to the same directory as the binary file.
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
 
 ## Disclaimer
-So far, this script has only been tested on UV-Vis binary files from a three different versions of the Agilent UV-Vis Chemstation software. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
+This script has only been tested on UV-Vis binary files from a few different versions of the Agilent UV-Vis Chemstation software. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
 
 **Known Supported Chemstation Versions:**
 - B.05.02 [16]
