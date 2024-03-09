@@ -1,9 +1,9 @@
 # uv2csv
 A simple script for converting Agilent 845x Chemstation UV-Vis binary files (**.KD** or **.SD** formats) to .csv format.
 
-Do you have **.KD** or **.SD** UV-Vis binary files but no access to the Agilent 845x UV-Vis Chemstation software? Are your **.KD** files massive and contain thousands of spectra? This script will automatically read and convert your **.KD** or **.SD** files to .csv format (and it's significantly faster than the Agilent Chemstation software!). Exports thousands of spectra in seconds!
+Do you have **.KD** or **.SD** UV-Vis files but no access to the Agilent 845x UV-Vis Chemstation software? Do you have large **.KD** files that contain thousands of spectra? This script will automatically read and convert your **.KD** or **.SD** files to .csv format (and it's significantly faster than the Agilent Chemstation software!). Exports thousands of spectra in seconds!
 
-Currently supports **.KD** and **.SD** binary file types.
+Currently supports **.KD** and **.SD** UV-Vis binary file types.
 
 ## Using This Script
 To use this script, simply run it from the command line:
@@ -14,9 +14,7 @@ python uv2csv.py
 Then provide a file path when prompted.
 
 ## How It Works
-In the **.KD** and **.SD** binary files, UV-Vis absorbance data is stored in a data table which has a unique hexadecimal header.
-
-The way this script works is by searching the **.KD** or **.SD** binary file for the unique hexadecimal header which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data that follows this header are encoded as little-endian double precision floats, which the script unpacks into a pandas DataFrame.
+This script works by searching a **.KD** or **.SD** file for a unique byte string which precedes the absorbance data (see [disclaimer](#disclaimer)). The absorbance data that follows this byte string are encoded as little-endian double precision floats, which the script unpacks into a pandas DataFrame.
 
 ## Export Location for .CSV Files
 The script automatically exports .csv files containing UV-Vis spectra upon parsing a specified **.KD** or **.SD** binary file. You can locate the exported .csv files in the same directory as the original **.KD** or **.SD** binary file.
@@ -39,10 +37,10 @@ if __name__ == '__main__':
 You must have the [pandas](https://pandas.pydata.org/) python package installed to use this script.
 
 ## Disclaimer
-This script has only been tested on UV-Vis binary files from a few different versions of the Agilent UV-Vis Chemstation software. Therefore, UV-Vis binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
+This script has only been tested on files from a small number of different versions of the Agilent UV-Vis Chemstation software. Therefore, binary files from other versions of UV-Vis Chemstation, different spectrometer setups, or custom methods may not work.
 
 **Known Supported Chemstation Versions:**
 - B.05.02 [16]
 - A.08.03 [71]
 
-If you encounter an issue, please submit an issue so I can improve this script!
+If you encounter an bug or problem, please submit an issue so I can improve this script!
