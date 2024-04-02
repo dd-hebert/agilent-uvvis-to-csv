@@ -21,7 +21,6 @@ class BinaryFile:
     Supported file types are .KD and .SD. Upon creation of a BinaryFile object,
     the specified .KD or .SD binary file is read and unpacked into a
     :class:`pandas.DataFrame`.
-
     """
 
     supported_file_types = ['.KD', '.SD']
@@ -44,8 +43,7 @@ class BinaryFile:
 
         Returns
         -------
-        None
-
+        None.
         """
         self.path = path
         self._check_path()
@@ -59,7 +57,6 @@ class BinaryFile:
                 self.export_csv()
 
     def _check_path(self):
-        """Check path is a .KD or .SD file."""
         while True:
             if self.path.lower() == 'q':
                 self.path = ''
@@ -73,9 +70,8 @@ class BinaryFile:
             self.path = os.path.normpath(input('Enter a file path or "q" to quit: '))
 
     def _check_wavelength_range(self):
-        """Check ``wavelength_range`` is valid."""
         if self.wavelength_range[0] > self.wavelength_range[1]:
-            raise Exception('Wavelength range error: minimum wavelength greater than maximum.')
+            raise ValueError('Wavelength range error: minimum wavelength greater than maximum.')
 
     def _absorbance_table_length(self):
         # Data is 8 hex characters per wavelength long.
@@ -86,19 +82,13 @@ class BinaryFile:
         """
         Read a .KD or .SD file and extract spectra and sample names.
 
-        Raises
-        ------
-        Exception
-            Raises an exception if no spectra can be found.
-
         Returns
         -------
-        spectra: list of :class:`pandas.DataFrame` objects
+        spectra : list of :class:`pandas.DataFrame` objects
             A list of :class:`pandas.DataFrame` objects containing the UV-Vis
             spectra.
-        samplenames: list
+        samplenames : list
             A list of strings with sample names.
-
         """
         print(f'Reading {self.file_type} file...')
 
@@ -107,11 +97,9 @@ class BinaryFile:
 
         spectra = self._read_spectra(file_bytes)
 
-        # Get sample names if parsing a .SD file.
         if self.file_type == '.SD':
             samplenames = self._read_samplenames(file_bytes, len(spectra))
             return spectra, samplenames
-
         return spectra, [''] * len(spectra)
 
     def _read_spectra(self, file_bytes):
@@ -133,16 +121,13 @@ class BinaryFile:
         spectra : list of :class:`pandas.DataFrame` objects
             A list of :class:`pandas.DataFrame` objects containing the UV-Vis
             spectra.
-
         """
         spectra = []
         position = 0
         wavelength = list(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
         absorbance_data_header, spacing = self._find_absorbance_data_header(file_bytes)
 
-        # Extract absorbance data.
         while True:
-            # Find the string of bytes that precedes absorbance data in binary file.
             header_location = file_bytes.find(absorbance_data_header, position)
             if header_location == -1:
                 break
@@ -178,17 +163,16 @@ class BinaryFile:
         -------
         header : string
             The absorbance data header as a hex string.
-
+        spacing : int
+            The spacing between the header and the beginning of the actual data.
         """
         # Each header contains its hex string and the spacing that follows it.
         headers = {
             '( A U ) ': (b'\x28\x00\x41\x00\x55\x00\x29\x00', 17),
-            '(AU) ': (b'\x28\x41\x55\x29\x00', 5)
-        }
+            '(AU) ': (b'\x28\x41\x55\x29\x00', 5)}
         for key, (header, spacing) in headers.items():
             if file_bytes.find(header, 0) != -1:
                 return header, spacing
-
         raise Exception('Error parsing file. No absorbance data headers could be found.')
 
     def _read_samplenames(self, file_bytes, num_samples):
@@ -206,10 +190,8 @@ class BinaryFile:
         -------
         samplenames : list
             A list of strings with the sample names.
-
         """
         samplename_header, spacing, end_char = self._find_samplename_header(file_bytes)
-
         if samplename_header is None:
             return [''] * num_samples
 
@@ -252,17 +234,18 @@ class BinaryFile:
         -------
         header : string
             The sample name header as a hex string.
-
+        spacing : int
+            The spacing between the header and the beginning of the actual data.
+        end_char : bytes
+            The end-of-data termination character.
         """
         # Each header contains its hex string, spacing, and termination character.
         headers = {
             'S a m p l e N a m e ': (b'\x53\x00\x61\x00\x6D\x00\x70\x00\x6C\x00\x65\x00\x4E\x00\x61\x00\x6D\x00\x65\x00', 28, b'\x09'),
-            '(`DataType': (b'\x28\x60\x44\x61\x74\x61\x54\x79\x70\x65', 33, b'\x02')
-        }
+            '(`DataType': (b'\x28\x60\x44\x61\x74\x61\x54\x79\x70\x65', 33, b'\x02')}
         for key, (header, spacing, end_char) in headers.items():
             if file_bytes.find(header, 0) != -1:
                 return header, spacing, end_char
-
         return None, None, None
 
     def export_csv(self):
@@ -278,8 +261,7 @@ class BinaryFile:
 
         Returns
         -------
-            None.
-
+        None.
         """
         print('Exporting .csv files...')
 
