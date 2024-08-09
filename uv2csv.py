@@ -209,7 +209,7 @@ class UVvisFile:
                 break
 
             samplenames.append(
-                file_bytes[start_idx:end_char_idx].replace(b'\x00', b'').decode('ascii', 'replace')
+                file_bytes[start_idx:end_char_idx].replace(b'\x00', b'').decode('utf-8', 'replace')
             )
 
             position = end_char_idx
