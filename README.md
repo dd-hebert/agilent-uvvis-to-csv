@@ -28,9 +28,8 @@ By default, the script assumes your spectrometer captures data from **190 nm to 
 
 ```python
 if __name__ == '__main__':
-    PATH = os.path.normpath(input('Enter a file path or "q" to quit: '))
-    UV_FILE = UVvisFile(PATH, export_csv=True, wavelength_range=(min, max))
-
+    if path := input_path():
+        UVvisFile(path, export_csv=True, wavelength_range=(min, max))
 ```
 
 ## Requirements
