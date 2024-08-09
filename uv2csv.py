@@ -9,23 +9,35 @@ Created by David Hebert
 
 """
 
-import os
-import struct
+from struct import iter_unpack
+from pathlib import Path
 import pandas as pd
+
+
+supported_file_types = ['.KD', '.SD']
 
 
 class UVvisFile:
     """
     A UVvisFile object.
 
-    Supported file types are .KD and .SD. Upon creation of a UVvisFile object, \
-    the specified .KD or .SD binary file is read and unpacked into a \
+    Supported file types are .KD and .SD. Upon creation of a `UVvisFile` \
+    object, the specified .KD or .SD binary file is read and unpacked into a \
     :class:`pandas.DataFrame`.
+
+    Attributes
+    ----------
+    spectrum_bytes_length : int
+        The length (in bytes) of each spectrum based on the range \
+        of wavelengths captured by the detector.
+    spectra : list[pandas.DataFrame]
+        A list of :class:`pandas.DataFrame` containing the UV-vis spectra.
+    samplenames : list[str]
+        A list of sample names as strings.
     """
 
-    supported_file_types = ['.KD', '.SD']
-
-    def __init__(self, path: str, export_csv: bool = False, wavelength_range: tuple = (190, 1100)) -> None:
+    def __init__(self, path: str, export_csv: bool = False,
+                 wavelength_range: tuple = (190, 1100)) -> None:
         """
         Initialize a :class:`UVvisFile` object and read a UV-vis binary file.
 
@@ -34,44 +46,25 @@ class UVvisFile:
         path : str
             The file path to a UV-vis binary file (.KD or .SD format).
         export_csv : bool
-            True or False. Set to True to automatically export .csv files upon creation \
-            of the :class:`UVvisFile` object. Default is False (.csv files not automatically \
-            exported.)
+            True or False. If True, automatically export .csv files upon \
+            creation of the :class:`UVvisFile` object. Default is False \
+            (.csv files not automatically exported.)
         wavelength_range : tuple[int, int]
-            Set the range of wavelengths (in nm) recorded by the detector (min, max).
-            Default value is (190, 1100).
-
-        Returns
-        -------
-        None.
+            Set the range of wavelengths (in nm) recorded by the detector \
+            (min, max). Default value is (190, 1100).
         """
-        self.path = path
-        self._check_path()
-        if self.path:
-            self.wavelength_range = wavelength_range
-            self.absorbance_table_length = self._absorbance_table_length()
-            self.name, self.file_type = os.path.splitext(os.path.basename(self.path))
-            self.spectra, self.samplenames = self.read_binary()
-            if export_csv is True:
-                self.export_csv()
+        self._path = Path(path)
+        self.path = str(self._path)
+        self.wavelength_range = sorted(map(int, wavelength_range))
+        self.spectrum_bytes_length = self._spectrum_bytes_length()
+        self.spectra, self.samplenames = self.read_binary()
 
-    def _check_path(self) -> None:
-        while True:
-            if self.path.lower() == 'q':
-                self.path = ''
-                break
+        if export_csv:
+            self.export_csv()
 
-            ext = os.path.splitext(self.path)[1].upper()
-            if ext in self.supported_file_types and os.path.isfile(self.path):
-                break
-
-            print('Invalid file path (must be a .KD or .SD file).')
-            self.path = os.path.normpath(input('Enter a file path or "q" to quit: '))
-
-    def _absorbance_table_length(self) -> int:
-        # Data is 8 hex characters per wavelength long.
-        absorbance_table_length = abs(self.wavelength_range[1] - self.wavelength_range[0]) * 8 + 8
-        return int(absorbance_table_length)
+    def _spectrum_bytes_length(self) -> int:
+        # Data is 8 hex characters for each wavelength.
+        return (self.wavelength_range[1] - self.wavelength_range[0] + 1) * 8
 
     def read_binary(self) -> tuple[list[pd.DataFrame], list[str]]:
         """
@@ -79,22 +72,24 @@ class UVvisFile:
 
         Returns
         -------
-        spectra : list[pd.DataFrame]
-            A list of :class:`pandas.DataFrame` objects containing the UV-vis
+        spectra : list[pandas.DataFrame]
+            A list of :class:`pandas.DataFrame` containing the UV-vis
             spectra.
         samplenames : list[str]
             A list of strings with sample names.
         """
-        print(f'Reading {self.file_type} file...')
+        ext = self._path.suffix.upper()
 
+        print(f'Reading {ext} file...')
         with open(self.path, 'rb') as binary_file:
             file_bytes = binary_file.read()
 
         spectra = self._read_spectra(file_bytes)
 
-        if self.file_type == '.SD':
+        if ext == '.SD':
             samplenames = self._read_samplenames(file_bytes, len(spectra))
             return spectra, samplenames
+
         return spectra, [''] * len(spectra)
 
     def _read_spectra(self, file_bytes: bytes) -> list[pd.DataFrame]:
@@ -113,33 +108,40 @@ class UVvisFile:
 
         Returns
         -------
-        spectra : list[pd.DataFrame]
-            A list of :class:`pandas.DataFrame` objects containing the UV-vis
+        spectra : list[pandas.DataFrame]
+            A list of :class:`pandas.DataFrame` containing the UV-vis
             spectra.
         """
         spectra = []
         position = 0
-        wavelength = list(range(min(self.wavelength_range), max(self.wavelength_range) + 1))
-        absorbance_data_header, spacing = self._find_absorbance_data_header(file_bytes)
+        header, spacing = self._find_absorbance_header(file_bytes)
+        wavelengths = list(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
 
         while True:
-            header_location = file_bytes.find(absorbance_data_header, position)
-            if header_location == -1:
+            header_idx = file_bytes.find(header, position)
+            if header_idx == -1:
                 break
 
-            start = header_location + spacing
-            end = start + self.absorbance_table_length
-            absorbance_values = [val for val, in struct.iter_unpack('<d', file_bytes[start:end])]
-            spectra.append(pd.DataFrame({'Wavelength (nm)': wavelength,
-                                         'Absorbance (AU)': absorbance_values}))
-            position = end
+            start_idx = header_idx + spacing
+            end_idx = start_idx + self.spectrum_bytes_length
+
+            absorbance_values = [
+                val for val, in iter_unpack('<d', file_bytes[start_idx:end_idx])
+            ]
+
+            spectra.append(
+                pd.DataFrame({'Wavelength (nm)': wavelengths,
+                              'Absorbance (AU)': absorbance_values})
+            )
+
+            position = end_idx
 
         if spectra == []:
             raise Exception('Error parsing file. No spectra found.')
 
         return spectra
 
-    def _find_absorbance_data_header(self, file_bytes: bytes) -> tuple[bytes, int]:
+    def _find_absorbance_header(self, file_bytes: bytes) -> tuple[bytes, int]:
         """
         Search the binary file for the appropriate absorbance data header.
 
@@ -188,27 +190,29 @@ class UVvisFile:
         samplenames : list[str]
             A list of sample names as strings.
         """
-        samplename_header, spacing, end_char = self._find_samplename_header(file_bytes)
-        if samplename_header is None:
+        header, spacing, end_char = self._find_samplename_header(file_bytes)
+        if header is None:
             return [''] * num_samples
 
         samplenames = []
         position = 0
 
         while True:
-            find_header = file_bytes.find(samplename_header, position)
-            if find_header == -1:
+            header_idx = file_bytes.find(header, position)
+            if header_idx == -1:
                 break
 
-            find_end_char = file_bytes.find(end_char, find_header + spacing)
-            if find_end_char == -1:
+            start_idx = header_idx + spacing
+
+            end_char_idx = file_bytes.find(end_char, header_idx + spacing)
+            if end_char_idx == -1:
                 break
 
-            start = find_header + spacing
-            end = find_end_char
-            samplename = file_bytes[start:end].replace(b'\x00', b'').decode('ascii', 'replace')
-            samplenames.append(samplename)
-            position = find_end_char + self.absorbance_table_length
+            samplenames.append(
+                file_bytes[start_idx:end_char_idx].replace(b'\x00', b'').decode('ascii', 'replace')
+            )
+
+            position = end_char_idx
 
         if len(samplenames) < num_samples:
             remainder = num_samples - len(samplenames)
@@ -219,8 +223,9 @@ class UVvisFile:
 
     def _find_samplename_header(self, file_bytes: bytes) -> tuple[bytes, int, bytes] | tuple[None, None, None]:
         """
-        Search the binary file for the appropriate sample name header. Returns (`None`, `None`, `None`) \
-        if a header is not found.
+        Search the binary file for the appropriate sample name header.
+
+        Returns `(None, None, None)` if no header is found.
 
         Parameters
         ----------
@@ -252,61 +257,98 @@ class UVvisFile:
         """
         Export spectra as .csv files.
 
-        For files containing multiple spectra, .csv files are exported to a \
-        folder named ``self.name`` in ``self.path``. For files with a single \
-        spectrum, a single .csv file named ``self.name`` is exported to \
-        ``self.path``.
+        When exporting multiple spectra, .csv files are exported to a \
+        folder in same directory as the parent .KD or .SD file. When \
+        exporting with a single spectrum, a single .csv file is \
+        exported to the same directory as the parent .KD or .SD file.
 
-        For .SD files, if a spectrum has a sample name associated with it, the \
-        sample name will be added to the filename as well.
-
-        Returns
-        -------
-        None.
+        For .SD files, sample names (if present) will be appended to the \
+        exported filenames.
         """
+        pardir = self._path.parent
+        base_filename = self._path.stem
         print('Exporting .csv files...')
 
-        def get_unique_directory(path: str) -> str:
-            """If a folder named self.name exists, add a number after."""
+        def get_unique_path(base_path: str, ext: str = '') -> str:
             n = 1
-            output_dir = path
-            while os.path.exists(output_dir) is True:
-                output_dir = os.path.splitext(self.path)[0] + f' ({n})'
+            unique_path = base_path
+
+            while pardir.joinpath(unique_path).with_suffix(ext).exists():
+                unique_path = base_path + f' ({n})'
                 n += 1
+
+            return unique_path + ext
+
+        def export_multiple_spectra(output_dir: Path) -> str:
+            output_dir.mkdir()
+            digits_prefix = len(str(len(self.spectra)))
+
+            for i, (spectrum, samplename) in enumerate(zip(self.spectra, self.samplenames), start=1):
+                filename = f'{str(i).zfill(digits_prefix)}'
+                if samplename:
+                    filename += f' - {samplename}'
+
+                spectrum.to_csv(
+                    path_or_buf=output_dir.joinpath(f'{filename}.csv'),
+                    index=False
+                )
+
             return output_dir
 
-        def get_unique_filename(base_filename: str) -> str:
-            """If a file named base_filename exists, add a number after."""
-            n = 1
-            unique_filename = base_filename
-            while os.path.exists(f'{unique_filename}.csv'):
-                unique_filename = base_filename + f' ({n})'
-                n += 1
-            return unique_filename
+        def export_single_spectrum(filename: str) -> str:
+            if self.samplenames[0]:
+                filename += f' - {self.samplenames[0]}'
+
+            filename = get_unique_path(filename, ext='.csv')
+            self.spectra[0].to_csv(
+                path_or_buf=pardir.joinpath(filename),
+                index=False
+            )
+
+            return filename
 
         if len(self.spectra) > 1:
-            output_dir = get_unique_directory(os.path.splitext(self.path)[0])
-            os.mkdir(output_dir)
-            digits = len(str(len(self.spectra)))
-
-            for i, (spectrum, samplename) in enumerate(zip(self.spectra, self.samplenames)):
-                base_filename = f'{str(i + 1).zfill(digits)}'
-                if samplename:
-                    base_filename += f' - {samplename}'
-
-                spectrum.to_csv(os.path.join(output_dir, f'{base_filename}.csv'), index=False)
-            print(f'Finished export: {output_dir}')
+            output_dir = pardir.joinpath(get_unique_path(base_filename))
+            out = export_multiple_spectra(output_dir)
 
         else:
-            base_filename = os.path.splitext(self.path)[0]
-            if self.samplenames[0]:
-                base_filename += f' - {self.samplenames[0]}'
+            out = export_single_spectrum(base_filename)
 
-            filename = get_unique_filename(base_filename)
-            self.spectra[0].to_csv(f'{filename}.csv', index=False)
-            print(f'Finished export: {filename}.csv')
+        print(f'Finished export: {out}')
+
+
+def input_path() -> str:
+    """
+    Get a user-inputted file path.
+
+    You can exit the input prompt by entering 'q' or alternatively \
+    by entering a EOF control character (platform-specific, CTRL+Z \
+    on Windows) or keyboard interrupt (CTRL+C on Windows).
+
+    Returns
+    -------
+    path : str
+        A valid path to a .KD or .SD file or an empty string
+        if the user exits the input prompt.
+    """
+    try:
+        path = input('Enter a file path or "q" to quit: ')
+
+        if path.lower() == 'q':
+            return ''
+
+        path = Path(path)
+        if path.is_file() and path.suffix.upper() in supported_file_types:
+            return str(path)
+
+        else:
+            print('Invalid file path (must be a .KD or .SD file).')
+            return input_path()
+
+    except (EOFError, KeyboardInterrupt):
+        return ''
 
 
 if __name__ == '__main__':
-    PATH = os.path.normpath(input('Enter a file path or "q" to quit: '))
-    UV_FILE = UVvisFile(PATH, export_csv=True)
+    if path := input_path():
+        UVvisFile(path, export_csv=True)
