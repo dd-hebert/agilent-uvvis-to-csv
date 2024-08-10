@@ -130,7 +130,7 @@ class UVvisFile:
         spectra = []
         position = 0
         header, spacing = self._find_absorbance_header(file_bytes)
-        wavelengths = list(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
+        wavelengths = pd.Series(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
 
         while True:
             header_idx = file_bytes.find(header, position)
