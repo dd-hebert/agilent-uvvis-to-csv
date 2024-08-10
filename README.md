@@ -24,7 +24,7 @@ You can locate the exported .csv files in the same directory as the original **.
 - **Files with Multiple Spectra:** .csv files are exported into a folder within the same directory as the binary file.
 - **Files with a Single Spectrum:** A single .csv file is exported to the same directory as the binary file.
 
-**Note:** If the **.SD** file you are parsing contains sample names, the sample names will be included in the file names of the exported .csv files. Please be aware that sample names are not currently supported for **.KD** files.
+**Note:** If the **.SD** file you are parsing contains sample names, the sample names will be appended to the file names of the exported .csv files. Please be aware that sample names are not currently supported for **.KD** files.
 
 ## Changing The Wavelength Range
 By default, the script assumes your spectrometer captures data from **190 nm to 1100 nm**. If the range of wavelengths your spectrometer records is different than this, you can set the wavelength range by adding a single keyword argument ``wavelength_range`` to the ``UVvisFile`` object constructor at the bottom of the script:
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 Running the script with an incorrect wavelength range might lead to unexpected results and messed-up looking spectra. It seems that both the Agilent 8453 and 8454 spectrometer models only capture data from 190 nm to 1100 nm, so the default setting should work fine for most cases. However, if needed, this setting can be adjusted as shown above. In the future, I may add a feature that automatically detects the correct wavelength range.
 
 ## Automation
-Running the script directly with ``python uv2csv.py`` allows you to export one **.KD** or **.SD** file at a time. This is fine if you only have a few files or are comfortable using the command line. However, if you need to export many files, doing them one by one might not be the most efficient way. Below is a simple example script that can help you automate the export of multiple **.KD** or **.SD** files all at once:
+Running the script directly with ``python uv2csv.py`` allows you to export only one **.KD** or **.SD** file at a time. This might be fine if you only have a few files to export. However, if you need to export many files, doing them one by one might not be the most efficient way. Below is a simple example script that can help you automate the export of multiple **.KD** or **.SD** files all at once:
 
 ```python
 from pathlib import Path
