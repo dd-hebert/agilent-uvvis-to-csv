@@ -14,7 +14,22 @@ from pathlib import Path
 import pandas as pd
 
 
-supported_file_types = ['.KD', '.SD']
+SUPPORTED_FILE_TYPES = ['.KD', '.SD']
+ENCODINGS = [
+    'utf8',
+    'latin1',
+    'windows-1252',
+    'latin9',
+    'cyrillic',
+    'windows-1251',
+    'latin2',
+    'latin5',
+    'sjis',
+    'korean',
+    'gb18030',
+    'big5',
+    'utf16'
+]
 
 
 class UVvisFile:
@@ -208,9 +223,7 @@ class UVvisFile:
             if end_char_idx == -1:
                 break
 
-            samplenames.append(
-                file_bytes[start_idx:end_char_idx].replace(b'\x00', b'').decode('utf-8', 'replace')
-            )
+            samplenames.append(decode_with_fallback(file_bytes[start_idx:end_char_idx]))
 
             position = end_char_idx
 
@@ -317,6 +330,23 @@ class UVvisFile:
         print(f'Finished export: {out}')
 
 
+def decode_with_fallback(byte_string: bytes) -> str:
+    byte_string = byte_string.replace(b'\x00', b'')
+
+    try:
+        return byte_string.decode('utf8')
+
+    except UnicodeDecodeError:
+        for encoding in ENCODINGS:
+            try:
+                return byte_string.decode(encoding)
+
+            except UnicodeDecodeError:
+                continue
+
+        return byte_string.decode('utf8', 'replace')
+
+
 def input_path() -> str:
     """
     Get a user-inputted file path.
@@ -338,7 +368,7 @@ def input_path() -> str:
             return ''
 
         path = Path(path)
-        if path.is_file() and path.suffix.upper() in supported_file_types:
+        if path.is_file() and path.suffix.upper() in SUPPORTED_FILE_TYPES:
             return str(path)
 
         else:
