@@ -16,7 +16,6 @@ import pandas as pd
 
 SUPPORTED_FILE_TYPES = ['.KD', '.SD']
 ENCODINGS = [
-    'utf8',
     'latin1',
     'windows-1252',
     'latin9',
@@ -127,29 +126,13 @@ class UVvisFile:
             A list of :class:`pandas.DataFrame` containing the UV-vis
             spectra.
         """
-        spectra = []
-        position = 0
         header, spacing = self._find_absorbance_header(file_bytes)
         wavelengths = pd.Series(range(self.wavelength_range[0], self.wavelength_range[1] + 1))
 
-        while True:
-            header_idx = file_bytes.find(header, position)
-            if header_idx == -1:
-                break
-
-            start_idx = header_idx + spacing
-            end_idx = start_idx + self.spectrum_bytes_length
-
-            absorbance_values = [
-                val for val, in iter_unpack('<d', file_bytes[start_idx:end_idx])
-            ]
-
-            spectra.append(
-                pd.DataFrame({'Wavelength (nm)': wavelengths,
-                              'Absorbance (AU)': absorbance_values})
-            )
-
-            position = end_idx
+        spectra = [
+            pd.DataFrame({'Wavelength (nm)': wavelengths, 'Absorbance (AU)': [val for val, in iter_unpack('<d', spectrum)]})
+            for spectrum in self._extract_data(file_bytes, header, spacing)
+        ]
 
         if spectra == []:
             raise Exception('Error parsing file. No spectra found.')
@@ -209,23 +192,10 @@ class UVvisFile:
         if header is None:
             return [''] * num_samples
 
-        samplenames = []
-        position = 0
-
-        while True:
-            header_idx = file_bytes.find(header, position)
-            if header_idx == -1:
-                break
-
-            start_idx = header_idx + spacing
-
-            end_char_idx = file_bytes.find(end_char, header_idx + spacing)
-            if end_char_idx == -1:
-                break
-
-            samplenames.append(decode_with_fallback(file_bytes[start_idx:end_char_idx]))
-
-            position = end_char_idx
+        samplenames = [
+            decode_with_fallback(samplename)
+            for samplename in self._extract_data(file_bytes, header, spacing, end_char)
+        ]
 
         if len(samplenames) < num_samples:
             remainder = num_samples - len(samplenames)
@@ -256,8 +226,17 @@ class UVvisFile:
         """
         # Each header contains its hex string, spacing, and termination character.
         headers = {
-            'S a m p l e N a m e ': (b'\x53\x00\x61\x00\x6D\x00\x70\x00\x6C\x00\x65\x00\x4E\x00\x61\x00\x6D\x00\x65\x00', 28, b'\x09'),
-            '(`DataType': (b'\x28\x60\x44\x61\x74\x61\x54\x79\x70\x65', 33, b'\x02')
+            'S a m p l e N a m e ': (
+                b'\x53\x00\x61\x00\x6D\x00\x70\x00\x6C\x00\x65'
+                b'\x00\x4E\x00\x61\x00\x6D\x00\x65\x00',
+                28,
+                b'\x09'
+            ),
+            '(`DataType': (
+                b'\x28\x60\x44\x61\x74\x61\x54\x79\x70\x65',
+                33,
+                b'\x02'
+            )
         }
 
         for _, (header, spacing, end_char) in headers.items():
@@ -265,6 +244,56 @@ class UVvisFile:
                 return header, spacing, end_char
 
         return None, None, None
+
+    def _extract_data(self, file_bytes: bytes, header: bytes,
+                      spacing: int, end_char: bytes | None = None) -> list[bytes]:
+        """
+        Extract relevant data from a bytes string, such as spectra or sample names.
+
+        Parameters
+        ----------
+        file_bytes : bytes
+            The raw bytes of the binary file.
+        header : bytes
+            The header which precedes the data of interest.
+        spacing : int
+            The spacing between the header and the data.
+        end_char : bytes | None, optional
+            A termination character for the data, by default None.
+
+        Returns
+        -------
+        out : list[bytes]
+            A list of bytes strings of the relevant data.
+        """
+        position = 0
+        out = []
+
+        if end_char:
+            def get_end_idx(file_bytes, start_idx):
+                end_idx = file_bytes.find(end_char, start_idx)
+                return end_idx if end_idx != -1 else None
+
+        else:
+            def get_end_idx(file_bytes, start_idx):
+                return start_idx + self.spectrum_bytes_length
+
+        while True:
+            header_idx = file_bytes.find(header, position)
+            if header_idx == -1:
+                break
+
+            start_idx = header_idx + spacing
+            end_idx = get_end_idx(file_bytes, start_idx)
+
+            if end_idx is None:
+                break
+
+            out.append(file_bytes[start_idx:end_idx])
+
+            position = end_idx
+
+        return out
 
     def export_csv(self) -> None:
         """
