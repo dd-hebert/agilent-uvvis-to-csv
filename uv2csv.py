@@ -328,7 +328,7 @@ class UVvisFile:
             for i, (spectrum, samplename) in enumerate(zip(self.spectra, self.samplenames), start=1):
                 filename = f'{str(i).zfill(digits_prefix)}'
                 if samplename:
-                    filename += f' - {samplename}'
+                    filename += f' - {sanitize_filename(samplename)}'
 
                 spectrum.to_csv(
                     path_or_buf=output_dir.joinpath(f'{filename}.csv'),
@@ -339,7 +339,7 @@ class UVvisFile:
 
         def export_single_spectrum(filename: str) -> str:
             if self.samplenames[0]:
-                filename += f' - {self.samplenames[0]}'
+                filename += f' - {sanitize_filename(self.samplenames[0])}'
 
             filename = get_unique_path(filename, ext='.csv')
             self.spectra[0].to_csv(
@@ -374,6 +374,31 @@ def decode_with_fallback(byte_string: bytes) -> str:
                 continue
 
         return byte_string.decode('utf8', 'replace')
+
+
+def sanitize_filename(name: str) -> str:
+    """
+    Replace characters that are invalid in file names.
+
+    Parameters
+    ----------
+    name : str
+        The original sample name.
+
+    Returns
+    -------
+    str
+        The sanitized file-name-safe string.
+    """
+    invalid_chars = '<>:"/\\|?*'
+    sanitized = ''.join(
+        '_' if ch in invalid_chars or ord(ch) < 32 else ch
+        for ch in name
+    ).strip()
+
+    sanitized = sanitized.rstrip('. ')
+
+    return sanitized or 'sample'
 
 
 def input_path() -> str:
